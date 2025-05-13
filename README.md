@@ -1,6 +1,6 @@
 ---
 title: LTX Video
-emoji: 🏃
+emoji: 🎥
 colorFrom: yellow
 colorTo: pink
 sdk: gradio
