@@ -11,6 +11,9 @@ pipe.to("cuda")
 pipe_upsample.to("cuda")
 pipe.vae.enable_tiling()
 
+MAX_SEED = np.iinfo(np.int32).max
+MAX_IMAGE_SIZE = 2048
+
 
 def round_to_nearest_resolution_acceptable_by_vae(height, width):
     height = height - (height % pipe.vae_temporal_compression_ratio)
@@ -24,12 +27,16 @@ def generate(prompt,
              steps,
              num_frames,
              seed,
-             randomize_seed):
+             randomize_seed,
+             t2v, progress=gr.Progress(track_tqdm=True)):
     
     expected_height, expected_width = 768, 1152
     downscale_factor = 2 / 3
 
-    if image is not None:
+    if randomize_seed:
+        seed = random.randint(0, MAX_SEED)
+
+    if image is not None or t2v:
         condition1 = LTXVideoCondition(video=image, frame_index=0)
     else:
         condition1 = None
@@ -43,8 +50,8 @@ def generate(prompt,
             conditions=condition1,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            width=downscaled_width,
-            height=downscaled_height,
+            # width=downscaled_width,
+            # height=downscaled_height,
             num_frames=num_frames,
             num_inference_steps=steps,
             decode_timestep = 0.05,
@@ -55,7 +62,7 @@ def generate(prompt,
         
     # Part 2. Upscale generated video using latent upsampler with fewer inference steps
     # The available latent upsampler upscales the height/width by 2x
-    upscaled_height, upscaled_width = downscaled_height * 2, downscaled_width * 2
+    # upscaled_height, upscaled_width = downscaled_height * 2, downscaled_width * 2
     # upscaled_latents = pipe_upsample(
     #     latents=latents,
     #     output_type="latent"
@@ -112,6 +119,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       with gr.Group():
         image = gr.Image(label="")
         prompt = gr.Textbox(label="prompt")
+        t2v = gr.Checkbox(label="run text-to-video", value=False)
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
@@ -134,7 +142,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
              steps,
              num_frames,
              seed,
-             randomize_seed], 
+             randomize_seed, t2v], 
                    outputs=[output])
   
 
