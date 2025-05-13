@@ -126,7 +126,15 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       num_frames = gr.Slider(label="# frames", minimum=1, maximum=200, value=161, step=1)
 
   
-    
+  run_button.click(fn=generate, 
+                   inputs=[prompt,
+             negative_prompt,
+             image, 
+             steps,
+             num_frames,
+             seed,
+             randomize_seed], 
+                   outputs=[output])
   
 
 demo.launch()
