@@ -4,6 +4,8 @@ import torch
 from diffusers import LTXConditionPipeline, LTXLatentUpsamplePipeline
 from diffusers.pipelines.ltx.pipeline_ltx_condition import LTXVideoCondition
 from diffusers.utils import export_to_video, load_video
+import numpy as np
+
 
 pipe = LTXConditionPipeline.from_pretrained("linoyts/LTX-Video-0.9.7-distilled-diffusers", torch_dtype=torch.bfloat16)
 pipe_upsample = LTXLatentUpsamplePipeline.from_pretrained("a-r-r-o-w/LTX-Video-0.9.7-Latent-Spatial-Upsampler-diffusers", vae=pipe.vae, torch_dtype=torch.bfloat16)
