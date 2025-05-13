@@ -25,13 +25,37 @@ def generate(prompt,
     return
 
 
-with gr.Blocks() as demo:
+css="""
+#col-container {
+    margin: 0 auto;
+    max-width: 900px;
+}
+"""
+
+js_func = """
+function refresh() {
+    const url = new URL(window.location);
+
+    if (url.searchParams.get('__theme') !== 'dark') {
+        url.searchParams.set('__theme', 'dark');
+        window.location.href = url.href;
+    }
+}
+"""
+
+with gr.Blocks(css=css, theme=gr.themes.Ocean(), js=js_func) as demo:
 
   gr.Markdown("# LTX Video 0.9.7 Distilled")
 
-  prompt = gr.Textbox(label="prompt")
-  output = gr.Video(interactive=False)
-  run_button = gr.Button()
+  with gr.Row():
+    with gr.Column():
+      with gr.Group():
+        image = gr.Image(label="")
+        prompt = gr.Textbox(label="prompt")
+      run_button = gr.Button()
+    with gr.Column():
+      output = gr.Video(interactive=False)
+      
 
   with gr.Accordion("Advanced settings", open=False):
      n_prompt = gr.Textbox(label="negative prompt", value="", visible=False)  
