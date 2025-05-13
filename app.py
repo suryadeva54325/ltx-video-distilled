@@ -80,7 +80,8 @@ def generate(prompt,
     
     # Part 4. Downscale the video to the expected resolution
     video = [frame.resize((expected_width, expected_height)) for frame in latents[0]]
-    return video
+    export_to_video(latents, "output.mp4", fps=24)
+    return "output.mp4"
 
 
 
