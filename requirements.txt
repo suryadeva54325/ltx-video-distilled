@@ -1,0 +1,10 @@
+accelerate
+transformers
+sentencepiece
+pillow
+numpy
+torchvision
+huggingface_hub
+spaces
+
+git+https://github.com/huggingface/diffusers.git@main
