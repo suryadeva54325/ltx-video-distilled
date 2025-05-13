@@ -43,7 +43,7 @@ function refresh() {
 }
 """
 
-with gr.Blocks(css=css, theme=gr.themes.Ocean(), js=js_func) as demo:
+with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
 
   gr.Markdown("# LTX Video 0.9.7 Distilled")
 
