@@ -50,36 +50,36 @@ def generate(prompt,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
             generator=torch.Generator().manual_seed(seed),
-            output_type="latent",
+            #output_type="latent",
         ).frames
         
     # Part 2. Upscale generated video using latent upsampler with fewer inference steps
     # The available latent upsampler upscales the height/width by 2x
     upscaled_height, upscaled_width = downscaled_height * 2, downscaled_width * 2
-    upscaled_latents = pipe_upsample(
-        latents=latents,
-        output_type="latent"
-    ).frames
+    # upscaled_latents = pipe_upsample(
+    #     latents=latents,
+    #     output_type="latent"
+    # ).frames
     
-    # Part 3. Denoise the upscaled video with few steps to improve texture (optional, but recommended)
-    video = pipe(
-        conditions=condition1,
-        prompt=prompt,
-        negative_prompt=negative_prompt,
-        width=upscaled_width,
-        height=upscaled_height,
-        num_frames=num_frames,
-        denoise_strength=0.4,  # Effectively, 4 inference steps out of 10
-        num_inference_steps=10,
-        latents=upscaled_latents,
-        decode_timestep=0.05,
-        image_cond_noise_scale=0.025,
-        generator=torch.Generator().manual_seed(seed),
-        output_type="pil",
-    ).frames[0]
+    # # Part 3. Denoise the upscaled video with few steps to improve texture (optional, but recommended)
+    # video = pipe(
+    #     conditions=condition1,
+    #     prompt=prompt,
+    #     negative_prompt=negative_prompt,
+    #     width=upscaled_width,
+    #     height=upscaled_height,
+    #     num_frames=num_frames,
+    #     denoise_strength=0.4,  # Effectively, 4 inference steps out of 10
+    #     num_inference_steps=10,
+    #     latents=upscaled_latents,
+    #     decode_timestep=0.05,
+    #     image_cond_noise_scale=0.025,
+    #     generator=torch.Generator().manual_seed(seed),
+    #     output_type="pil",
+    # ).frames[0]
     
     # Part 4. Downscale the video to the expected resolution
-    video = [frame.resize((expected_width, expected_height)) for frame in video]
+    video = [frame.resize((expected_width, expected_height)) for frame in latents[0]]
     return video
 
 
