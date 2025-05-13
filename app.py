@@ -117,7 +117,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       
 
   with gr.Accordion("Advanced settings", open=False):
-     n_prompt = gr.Textbox(label="negative prompt", value="", visible=False)  
+     negative_prompt = gr.Textbox(label="negative prompt", value="", visible=False)  
      with gr.Row():
       seed = gr.Number(label="seed", value=0, precision=0)
       randomize_seed = gr.Checkbox(label="randomize seed")
