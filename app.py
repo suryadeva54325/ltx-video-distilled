@@ -40,15 +40,7 @@ def generate(prompt,
 
     if image is not None or t2v:
         condition1 = LTXVideoCondition(video=image, frame_index=0)
-    else:
-        condition1 = None
-
-    # Part 1. Generate video at smaller resolution
-    # Text-only conditioning is also supported without the need to pass `conditions`
-    downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
-    downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
-    
-    latents = pipe(
+        latents = pipe(
             conditions=condition1,
             prompt=prompt,
             negative_prompt=negative_prompt,
@@ -61,6 +53,38 @@ def generate(prompt,
             generator=torch.Generator().manual_seed(seed),
             #output_type="latent",
         ).frames
+    else:
+        latents = pipe(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            # width=downscaled_width,
+            # height=downscaled_height,
+            num_frames=num_frames,
+            num_inference_steps=steps,
+            decode_timestep = 0.05,
+            decode_noise_scale = 0.025,
+            generator=torch.Generator().manual_seed(seed),
+            #output_type="latent",
+        ).frames
+
+    # Part 1. Generate video at smaller resolution
+    # Text-only conditioning is also supported without the need to pass `conditions`
+    downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
+    downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
+    
+    # latents = pipe(
+    #         conditions=condition1,
+    #         prompt=prompt,
+    #         negative_prompt=negative_prompt,
+    #         # width=downscaled_width,
+    #         # height=downscaled_height,
+    #         num_frames=num_frames,
+    #         num_inference_steps=steps,
+    #         decode_timestep = 0.05,
+    #         decode_noise_scale = 0.025,
+    #         generator=torch.Generator().manual_seed(seed),
+    #         #output_type="latent",
+    #     ).frames
         
     # Part 2. Upscale generated video using latent upsampler with fewer inference steps
     # The available latent upsampler upscales the height/width by 2x
