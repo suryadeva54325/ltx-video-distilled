@@ -1,8 +1,10 @@
 import gradio as gr
 import spaces 
 import torch
-from diffusers import LTXConditionPipeline, LTXLatentUpsamplePipeline
-from diffusers.pipelines.ltx.pipeline_ltx_condition import LTXVideoCondition
+from pipeline_ltx_condition import LTXVideoCondition, LTXConditionPipeline
+from diffusers import LTXLatentUpsamplePipeline
+#from diffusers import LTXConditionPipeline, LTXLatentUpsamplePipeline
+#from diffusers.pipelines.ltx.pipeline_ltx_condition import LTXVideoCondition
 from diffusers.utils import export_to_video, load_video
 import numpy as np
 
