@@ -306,8 +306,8 @@ css="""
 """
 
 with gr.Blocks(css=css) as demo:
-    gr.Markdown("# LTX Video 0.9.7 Distilled (using LTX-Video lib)")
-    gr.Markdown("Generates a short video based on text prompt, image, or existing video. Models are moved to GPU during generation and back to CPU afterwards to save VRAM.")
+    gr.Markdown("# LTX Video 0.9.7 Distilled")
+    gr.Markdown("Fast high quality video generation. [Model](https://huggingface.co/Lightricks/LTX-Video/blob/main/ltxv-2b-0.9.6-distilled-04-25.safetensors) [GitHub](https://github.com/Lightricks/LTX-Video) [Diffusers](#)")
     with gr.Row():
         with gr.Column():
             with gr.Tab("image-to-video") as image_tab:
@@ -328,7 +328,7 @@ with gr.Blocks(css=css) as demo:
                 v2v_button = gr.Button("Generate Video-to-Video", variant="primary")
 
             duration_input = gr.Slider(
-                label="Duration (seconds)", 
+                label="Video Duration (seconds)", 
                 minimum=0.3, 
                 maximum=8.5, 
                 value=2,  
