@@ -311,7 +311,7 @@ css="""
 
 with gr.Blocks(css=css) as demo:
     gr.Markdown("# LTX Video 0.9.7 Distilled")
-    gr.Markdown("Fast high quality video generation. [Model](https://huggingface.co/Lightricks/LTX-Video/blob/main/ltxv-2b-0.9.6-distilled-04-25.safetensors) [GitHub](https://github.com/Lightricks/LTX-Video) [Diffusers](#)")
+    gr.Markdown("Fast high quality video generation. [Model](https://huggingface.co/Lightricks/LTX-Video/blob/main/ltxv-13b-0.9.7-distilled.safetensors) [GitHub](https://github.com/Lightricks/LTX-Video) [Diffusers](#)")
     
     with gr.Row():
         with gr.Column():
