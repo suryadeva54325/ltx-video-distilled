@@ -129,8 +129,18 @@ def calculate_new_dimensions(orig_w, orig_h):
 
     return int(new_h), int(new_w)
 
+def get_duration(prompt, negative_prompt, input_image_filepath, input_video_filepath,
+             height_ui, width_ui, mode,
+             ui_steps, duration_ui, 
+             ui_frames_to_use,
+             seed_ui, randomize_seed, ui_guidance_scale, improve_texture_flag,
+             progress):
+    if duration_ui > 7:
+        return 75
+    else:
+        return 60
 
-@spaces.GPU
+@spaces.GPU(duration=get_duration)
 def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath,
              height_ui, width_ui, mode,
              ui_steps, duration_ui, 
