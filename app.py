@@ -21,8 +21,8 @@ MAX_IMAGE_SIZE = 2048
 
 def round_to_nearest_resolution_acceptable_by_vae(height, width):
     print("before rounding",height, width)
-    height = height - (height % pipe.vae_temporal_compression_ratio)
-    width = width - (width % pipe.vae_temporal_compression_ratio)
+    height = height - (height % pipe.vae_spatial_compression_ratio)
+    width = width - (width % pipe.vae_spatial_compression_ratio)
     print("after rounding",height, width)
     return height, width
 
