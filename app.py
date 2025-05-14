@@ -41,6 +41,7 @@ def generate(prompt,
              mode,
              steps,
              num_frames,
+             frames_to_use,
              seed,
              randomize_seed,
              improve_texture=False, progress=gr.Progress(track_tqdm=True)):
@@ -56,7 +57,6 @@ def generate(prompt,
     downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
 
     if mode == "text-to-video" and video is not None:
-        frames_to_use = 21 #todo make configurable
         video = load_video(video)[:frames_to_use]
         condition = True
     elif mode == "image-to-video" and image is not None:
@@ -77,6 +77,7 @@ def generate(prompt,
             num_inference_steps=steps,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
+            guidance_scale=1.0,
             generator=torch.Generator(device="cuda").manual_seed(seed),
             output_type="latent",
         ).frames
@@ -90,6 +91,7 @@ def generate(prompt,
             num_inference_steps=steps,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
+            guidance_scale=1.0,
             generator=torch.Generator(device="cuda").manual_seed(seed),
             output_type="latent",
         ).frames
@@ -180,10 +182,11 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
           #prompt = gr.Textbox(label="prompt")
         with gr.Tab("image-to-video") as image_tab:
           image = gr.Image(label="")
-          #prompt = gr.Textbox(label="prompt")
         with gr.Tab("video-to-video") as video_tab:
           video = gr.Video(label="")
+          frames_to_use = gr.Number(label="num frames to use",info="first # of frames to use from the input video", value=1)
         prompt = gr.Textbox(label="prompt")
+        improve_texture = gr.Checkbox("improve texture", value=False, info="note it slows generation")
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
@@ -197,6 +200,9 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
      with gr.Row():
       steps = gr.Slider(label="Steps", minimum=1, maximum=30, value=8, step=1)
       num_frames = gr.Slider(label="# frames", minimum=1, maximum=161, value=96, step=1)
+     with gr.Row():
+       height = gr.Slider(label="height", value=512, step=1)
+       width = gr.Slider(label="width", value=704, step=1)
     
 
   text_tab.select(fn=change_mode_to_text, inputs=[], outputs=[mode])
@@ -211,8 +217,9 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
              mode,
              steps,
              num_frames,
+             frames_to_use,
              seed,
-             randomize_seed], 
+             randomize_seed, improve_texture], 
                    outputs=[output])
 
 
