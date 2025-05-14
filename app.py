@@ -365,7 +365,7 @@ def generate(prompt,
     # We expect B=1 from typical generation
     video_single_batch = result_frames_tensor[0] # Shape: (C, F, H, W)
     video_single_batch = (video_single_batch / 2 + 0.5).clamp(0, 1) # Normalize to [0,1]
-    video_single_batch = video_single_batch.permute(1, 2, 3, 0).cpu().numpy() # F, H, W, C
+    video_single_batch = video_single_batch.permute(1, 2, 3, 0).cpu().float().numpy() # F, H, W, C
     
     for frame_idx in range(video_single_batch.shape[0]):
         frame_np = (video_single_batch[frame_idx] * 255).astype(np.uint8)
