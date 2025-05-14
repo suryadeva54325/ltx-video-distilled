@@ -48,6 +48,7 @@ def generate(prompt,
              frames_to_use,
              seed,
              randomize_seed,
+             guidance_scale,
              improve_texture=False, progress=gr.Progress(track_tqdm=True)):
     
     if randomize_seed:
@@ -63,16 +64,15 @@ def generate(prompt,
     if mode == "text-to-video" and (video is not None):
         video = load_video(video)[:frames_to_use]
         condition = True
-    #elif mode == "image-to-video" and (image is not None):
-    elif image is not None:
-        print("WTFFFFFF")
+    elif mode == "image-to-video" and (image is not None):
+        print("WTFFFFFF 1")
         video = [image]
         condition = True
     else:
        condition=False
 
     if condition:
-        print("WTFFFFFF")
+        print("WTFFFFFF 2")
         condition1 = LTXVideoCondition(video=video, frame_index=0)
     else:
         condition1 = None
@@ -87,7 +87,7 @@ def generate(prompt,
         num_inference_steps=steps,
         decode_timestep = 0.05,
         decode_noise_scale = 0.025,
-        guidance_scale=1.0,
+        guidance_scale=guidance_scale,
         generator=torch.Generator(device="cuda").manual_seed(seed),
         output_type="latent",
     ).frames
@@ -110,7 +110,7 @@ def generate(prompt,
             width=upscaled_width,
             height=upscaled_height,
             num_frames=num_frames,
-            guidance_scale=1.0,
+            guidance_scale=guidance_scale,
             denoise_strength=0.6,  # Effectively, 0.6 * 3 inference steps
             num_inference_steps=3,
             latents=upscaled_latents,
@@ -178,6 +178,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       seed = gr.Number(label="seed", value=0, precision=0)
       randomize_seed = gr.Checkbox(label="randomize seed")
      with gr.Row():
+      guidance_scale= gr.Slider(label="guidance scale", minimum=0, maximum=10, value=3, step=1)
       steps = gr.Slider(label="Steps", minimum=1, maximum=30, value=8, step=1)
       num_frames = gr.Slider(label="# frames", minimum=1, maximum=161, value=96, step=1)
      with gr.Row():
@@ -201,7 +202,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
              num_frames,
              frames_to_use,
              seed,
-             randomize_seed, improve_texture], 
+             randomize_seed,guidance_scale, improve_texture], 
                    outputs=[output])
 
 
