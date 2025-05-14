@@ -171,6 +171,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
         with gr.Tab("video-to-video"):
           video = gr.Video(label="")
         prompt = gr.Textbox(label="prompt")
+        t2v = gr.Checkbox(label="t2v", value=False)
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
