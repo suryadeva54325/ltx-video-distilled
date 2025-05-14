@@ -63,7 +63,8 @@ def generate(prompt,
     if mode == "text-to-video" and (video is not None):
         video = load_video(video)[:frames_to_use]
         condition = True
-    elif mode == "image-to-video" and (image is not None):
+    #elif mode == "image-to-video" and (image is not None):
+    elif image is not None:
         print("WTFFFFFF")
         video = [image]
         condition = True
