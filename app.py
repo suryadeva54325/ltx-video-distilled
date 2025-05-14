@@ -64,12 +64,14 @@ def generate(prompt,
         video = load_video(video)[:frames_to_use]
         condition = True
     elif mode == "image-to-video" and (image is not None):
+        print("WTFFFFFF")
         video = [image]
         condition = True
     else:
        condition=False
 
     if condition:
+        print("WTFFFFFF")
         condition1 = LTXVideoCondition(video=video, frame_index=0)
     else:
         condition1 = None
