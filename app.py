@@ -94,7 +94,7 @@ if latent_upsampler_instance:
 
 # --- Helper function for dimension calculation ---
 MIN_DIM_SLIDER = 256  # As defined in the sliders minimum attribute
-TARGET_FIXED_SIDE = 512 # Desired fixed side length as per requirement
+TARGET_FIXED_SIDE = 768 # Desired fixed side length as per requirement
 
 def calculate_new_dimensions(orig_w, orig_h):
     """
@@ -301,26 +301,6 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
         except Exception as e2:
             print(f"Fallback video saving error: {e2}")
             raise gr.Error(f"Failed to save video: {e2}")
-
-    if isinstance(input_image_filepath, tempfile._TemporaryFileWrapper):
-        if os.path.exists(input_image_filepath.name):
-             try:
-                input_image_filepath.close()
-                os.remove(input_image_filepath.name)
-             except: pass 
-    elif input_image_filepath and os.path.exists(input_image_filepath) and input_image_filepath.startswith(tempfile.gettempdir()):
-        try: os.remove(input_image_filepath)
-        except: pass
-
-    if isinstance(input_video_filepath, tempfile._TemporaryFileWrapper):
-        if os.path.exists(input_video_filepath.name):
-            try:
-                input_video_filepath.close()
-                os.remove(input_video_filepath.name)
-            except: pass
-    elif input_video_filepath and os.path.exists(input_video_filepath) and input_video_filepath.startswith(tempfile.gettempdir()):
-        try: os.remove(input_video_filepath)
-        except: pass
             
     return output_video_path
 
