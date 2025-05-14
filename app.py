@@ -23,36 +23,49 @@ def round_to_nearest_resolution_acceptable_by_vae(height, width):
     height = height - (height % pipe.vae_temporal_compression_ratio)
     width = width - (width % pipe.vae_temporal_compression_ratio)
     return height, width
+
+def change_mode_to_text():
+  return gr.update(value="text-to-video")
+
+def change_mode_to_image():
+  return gr.update(value="image-to-video")
+
+def change_mode_to_video():
+  return gr.update(value="video-to-video")
     
 @spaces.GPU
 def generate(prompt,
              negative_prompt,
              image,
              video,
+             mode,
              steps,
              num_frames,
              seed,
              randomize_seed,
-             t2v, improve_texture=False, progress=gr.Progress(track_tqdm=True)):
+             improve_texture=False, progress=gr.Progress(track_tqdm=True)):
     
     if randomize_seed:
         seed = random.randint(0, MAX_SEED)
         
     # Part 1. Generate video at smaller resolution
     # Text-only conditioning is also supported without the need to pass `conditions`
-    expected_height, expected_width = 768, 1152
+    expected_height, expected_width = 768, 1152 #todo make configurable
     downscale_factor = 2 / 3
     downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
     downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
 
-    condition = image is not None or video is not None
-    if video:
-        frames_to_use = 21
+    if mode == "text-to-video" and video is not None:
+        frames_to_use = 21 #todo make configurable
         video = load_video(video)[:frames_to_use]
-    else:
+        condition = True
+    elif mode == "image-to-video" and image is not None:
         video = [image]
+        condition = True
+    else:
+       condition=False
 
-    if condition and (not t2v):
+    if condition:
         condition1 = LTXVideoCondition(video=video, frame_index=0)
         latents = pipe(
             conditions=condition1,
@@ -158,20 +171,19 @@ function refresh() {
 with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
 
   gr.Markdown("# LTX Video 0.9.7 Distilled")
-
+  mode = gr.State(value="text-to-video")
   with gr.Row():
     with gr.Column():
       with gr.Group():
-        with gr.Tab("text-to-video"):
+        with gr.Tab("text-to-video") as text_tab:
           image = gr.Image(label="", visible=False)
           #prompt = gr.Textbox(label="prompt")
-        with gr.Tab("image-to-video"):
+        with gr.Tab("image-to-video") as image_tab:
           image = gr.Image(label="")
           #prompt = gr.Textbox(label="prompt")
-        with gr.Tab("video-to-video"):
+        with gr.Tab("video-to-video") as video_tab:
           video = gr.Video(label="")
         prompt = gr.Textbox(label="prompt")
-        t2v = gr.Checkbox(label="t2v", value=False)
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
@@ -184,20 +196,26 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       randomize_seed = gr.Checkbox(label="randomize seed")
      with gr.Row():
       steps = gr.Slider(label="Steps", minimum=1, maximum=30, value=8, step=1)
-      num_frames = gr.Slider(label="# frames", minimum=1, maximum=30, value=8, step=1)
+      num_frames = gr.Slider(label="# frames", minimum=1, maximum=161, value=96, step=1)
     
 
-  
+  text_tab.select(fn=change_mode_to_text, inputs=[], outputs=[mode])
+  image_tab.select(fn=change_mode_to_image, inputs=[], outputs=[mode])
+  video_tab.select(fn=change_mode_to_video, inputs=[], outputs=[mode])
+    
   run_button.click(fn=generate, 
                    inputs=[prompt,
              negative_prompt,
              image,
-             video, 
+             video,
+             mode,
              steps,
              num_frames,
              seed,
-             randomize_seed, t2v], 
+             randomize_seed], 
                    outputs=[output])
+
+
   
 
 demo.launch()
