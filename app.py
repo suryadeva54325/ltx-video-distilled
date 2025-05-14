@@ -61,6 +61,7 @@ def generate(prompt,
     downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
     downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
 
+    print(mode)
     if mode == "text-to-video" and (video is not None):
         video = load_video(video)[:frames_to_use]
         condition = True
