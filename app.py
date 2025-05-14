@@ -344,6 +344,7 @@ with gr.Blocks(css=css) as demo:
 
         with gr.Column():
             output_video = gr.Video(label="Generated Video", interactive=False)
+            gr.DeepLinkButton()
 
     with gr.Accordion("Advanced settings", open=False):
         negative_prompt_input = gr.Textbox(label="Negative Prompt", value="worst quality, inconsistent motion, blurry, jittery, distorted", lines=2)
