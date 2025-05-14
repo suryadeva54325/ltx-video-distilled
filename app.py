@@ -119,7 +119,7 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
              ui_steps, num_frames_ui,
              ui_frames_to_use,
              seed_ui, randomize_seed, ui_guidance_scale, improve_texture_flag,
-             progress=gr.Progress(track_ τότε=True)):
+             progress=gr.Progress(track_tqdm=True)):
 
     target_inference_device = get_device()
     print(f"Target inference device: {target_inference_device}")
