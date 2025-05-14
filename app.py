@@ -108,7 +108,7 @@ latent_upsampler = latent_upsampler.to(torch.bfloat16)
 multi_scale_pipe = LTXMultiScalePipeline(
     video_pipeline=pipe,
     latent_upsampler=latent_upsampler
-).to(torch.bfloat16)
+)
 # --- End Global Configuration & Model Loading ---
 
 
