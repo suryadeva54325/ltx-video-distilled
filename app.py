@@ -27,14 +27,17 @@ def round_to_nearest_resolution_acceptable_by_vae(height, width):
 @spaces.GPU
 def generate(prompt,
              negative_prompt,
-             image, 
+             image,
+             video,
              steps,
              num_frames,
              seed,
              randomize_seed,
              t2v, improve_texture=False, progress=gr.Progress(track_tqdm=True)):
     
-    
+    if randomize_seed:
+        seed = random.randint(0, MAX_SEED)
+        
     # Part 1. Generate video at smaller resolution
     # Text-only conditioning is also supported without the need to pass `conditions`
     expected_height, expected_width = 768, 1152
@@ -42,11 +45,15 @@ def generate(prompt,
     downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
     downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
 
-    if randomize_seed:
-        seed = random.randint(0, MAX_SEED)
+    condition = image is not None or video is not None
+    if video:
+        frames_to_use = 21
+        video = load_video(video)[:frames_to_use]
+    else:
+        video = [image]
 
-    if image is not None or t2v:
-        condition1 = LTXVideoCondition(video=image, frame_index=0)
+    if condition and (not t2v):
+        condition1 = LTXVideoCondition(video=video, frame_index=0)
         latents = pipe(
             conditions=condition1,
             prompt=prompt,
@@ -155,9 +162,15 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
   with gr.Row():
     with gr.Column():
       with gr.Group():
-        image = gr.Image(label="")
+        with gr.Tab("text-to-video"):
+          image = gr.Image(label="", visible=False)
+          #prompt = gr.Textbox(label="prompt")
+        with gr.Tab("image-to-video"):
+          image = gr.Image(label="")
+          #prompt = gr.Textbox(label="prompt")
+        with gr.Tab("video-to-video"):
+          video = gr.Video(label="")
         prompt = gr.Textbox(label="prompt")
-        t2v = gr.Checkbox(label="run text-to-video", value=False)
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
@@ -170,13 +183,15 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       randomize_seed = gr.Checkbox(label="randomize seed")
      with gr.Row():
       steps = gr.Slider(label="Steps", minimum=1, maximum=30, value=8, step=1)
-      num_frames = gr.Slider(label="# frames", minimum=1, maximum=200, value=161, step=1)
+      num_frames = gr.Slider(label="# frames", minimum=1, maximum=30, value=8, step=1)
+    
 
   
   run_button.click(fn=generate, 
                    inputs=[prompt,
              negative_prompt,
-             image, 
+             image,
+             video, 
              steps,
              num_frames,
              seed,
