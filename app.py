@@ -94,14 +94,14 @@ pipe = create_ltx_video_pipeline(
     sampler=PIPELINE_CONFIG_YAML["sampler"], # "from_checkpoint" or specific sampler
     device=DEVICE,
     enhance_prompt=False, # Assuming Gradio controls this, or set based on YAML later
-).to(torch.bfloat16)
+)#.to(torch.bfloat16)
 
 # Create Latent Upsampler
 latent_upsampler = create_latent_upsampler(
     latent_upsampler_model_path=spatial_upsampler_path,
     device=DEVICE
 )
-latent_upsampler = latent_upsampler.to(torch.bfloat16)
+#latent_upsampler = latent_upsampler.to(torch.bfloat16)
 
 
 # Multi-scale pipeline (wrapper)
