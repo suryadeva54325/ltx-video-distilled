@@ -131,7 +131,7 @@ def calculate_new_dimensions(orig_w, orig_h):
 
 def get_duration(prompt, negative_prompt, input_image_filepath, input_video_filepath,
              height_ui, width_ui, mode,
-             ui_steps, duration_ui, 
+             duration_ui, # Removed ui_steps
              ui_frames_to_use,
              seed_ui, randomize_seed, ui_guidance_scale, improve_texture_flag,
              progress):
@@ -143,7 +143,7 @@ def get_duration(prompt, negative_prompt, input_image_filepath, input_video_file
 @spaces.GPU(duration=get_duration)
 def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath,
              height_ui, width_ui, mode,
-             ui_steps, duration_ui, 
+             duration_ui, # Removed ui_steps
              ui_frames_to_use,
              seed_ui, randomize_seed, ui_guidance_scale, improve_texture_flag,
              progress=gr.Progress(track_tqdm=True)):
@@ -245,12 +245,15 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
         multi_scale_pipeline_obj = LTXMultiScalePipeline(pipeline_instance, active_latent_upsampler)
         
         first_pass_args = PIPELINE_CONFIG_YAML.get("first_pass", {}).copy()
-        first_pass_args["guidance_scale"] = float(ui_guidance_scale)
-        if "timesteps" not in first_pass_args:
-            first_pass_args["num_inference_steps"] = int(ui_steps)
+        first_pass_args["guidance_scale"] = float(ui_guidance_scale) # UI overrides YAML
+        # num_inference_steps will be derived from len(timesteps) in the pipeline
+        first_pass_args.pop("num_inference_steps", None)
+
 
         second_pass_args = PIPELINE_CONFIG_YAML.get("second_pass", {}).copy()
-        second_pass_args["guidance_scale"] = float(ui_guidance_scale)
+        second_pass_args["guidance_scale"] = float(ui_guidance_scale) # UI overrides YAML
+        # num_inference_steps will be derived from len(timesteps) in the pipeline
+        second_pass_args.pop("num_inference_steps", None)
         
         multi_scale_call_kwargs = call_kwargs.copy()
         multi_scale_call_kwargs.update({
@@ -263,8 +266,16 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
         result_images_tensor = multi_scale_pipeline_obj(**multi_scale_call_kwargs).images
     else:
         single_pass_call_kwargs = call_kwargs.copy()
-        single_pass_call_kwargs["guidance_scale"] = float(ui_guidance_scale)
-        single_pass_call_kwargs["num_inference_steps"] = int(ui_steps)
+        first_pass_config_from_yaml = PIPELINE_CONFIG_YAML.get("first_pass", {})
+
+        single_pass_call_kwargs["timesteps"] = first_pass_config_from_yaml.get("timesteps")
+        single_pass_call_kwargs["guidance_scale"] = float(ui_guidance_scale) # UI overrides YAML
+        single_pass_call_kwargs["stg_scale"] = first_pass_config_from_yaml.get("stg_scale")
+        single_pass_call_kwargs["rescaling_scale"] = first_pass_config_from_yaml.get("rescaling_scale")
+        single_pass_call_kwargs["skip_block_list"] = first_pass_config_from_yaml.get("skip_block_list")
+        
+        # Remove keys that might conflict or are not used in single pass / handled by above
+        single_pass_call_kwargs.pop("num_inference_steps", None) 
         single_pass_call_kwargs.pop("first_pass", None) 
         single_pass_call_kwargs.pop("second_pass", None)
         single_pass_call_kwargs.pop("downscale_factor", None)
@@ -335,7 +346,7 @@ with gr.Blocks(css=css) as demo:
                 video_n_hidden = gr.Textbox(label="video_n", visible=False, value=None)
                 t2v_prompt = gr.Textbox(label="Prompt", value="A majestic dragon flying over a medieval castle", lines=3)
                 t2v_button = gr.Button("Generate Text-to-Video", variant="primary")
-            with gr.Tab("video-to-video") as video_tab:
+            with gr.Tab("video-to-video", visible=False) as video_tab:
                 image_v_hidden = gr.Textbox(label="image_v", visible=False, value=None)
                 video_v2v = gr.Video(label="Input Video", sources=["upload", "webcam"]) # type defaults to filepath
                 frames_to_use = gr.Slider(label="Frames to use from input video", minimum=9, maximum=MAX_NUM_FRAMES, value=9, step=8, info="Number of initial frames to use for conditioning/transformation. Must be N*8+1.")
@@ -363,8 +374,9 @@ with gr.Blocks(css=css) as demo:
             randomize_seed_input = gr.Checkbox(label="Randomize Seed", value=False)
         with gr.Row():
             guidance_scale_input = gr.Slider(label="Guidance Scale (CFG)", minimum=1.0, maximum=10.0, value=PIPELINE_CONFIG_YAML.get("first_pass", {}).get("guidance_scale", 1.0), step=0.1, info="Controls how much the prompt influences the output. Higher values = stronger influence.")
-            default_steps = len(PIPELINE_CONFIG_YAML.get("first_pass", {}).get("timesteps", [1]*7)) 
-            steps_input = gr.Slider(label="Inference Steps (for first pass if multi-scale)", minimum=1, maximum=30, value=default_steps, step=1, info="Number of denoising steps. More steps can improve quality but increase time. If YAML defines 'timesteps' for a pass, this UI value is ignored for that pass.")
+            # Removed steps_input slider
+            # default_steps = len(PIPELINE_CONFIG_YAML.get("first_pass", {}).get("timesteps", [1]*7)) 
+            # steps_input = gr.Slider(label="Inference Steps (for first pass if multi-scale)", minimum=1, maximum=30, value=default_steps, step=1, info="Number of denoising steps. More steps can improve quality but increase time. If YAML defines 'timesteps' for a pass, this UI value is ignored for that pass.")
         with gr.Row():
             height_input = gr.Slider(label="Height", value=512, step=32, minimum=MIN_DIM_SLIDER, maximum=MAX_IMAGE_SIZE, info="Must be divisible by 32.")
             width_input = gr.Slider(label="Width", value=704, step=32, minimum=MIN_DIM_SLIDER, maximum=MAX_IMAGE_SIZE, info="Must be divisible by 32.")
@@ -436,17 +448,17 @@ with gr.Blocks(css=css) as demo:
     # --- INPUT LISTS (remain the same structurally) ---
     t2v_inputs = [t2v_prompt, negative_prompt_input, image_n_hidden, video_n_hidden,
                   height_input, width_input, gr.State("text-to-video"),
-                  steps_input, duration_input, gr.State(0), 
+                  duration_input, gr.State(0), # Removed steps_input
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
     
     i2v_inputs = [i2v_prompt, negative_prompt_input, image_i2v, video_i_hidden,
                   height_input, width_input, gr.State("image-to-video"),
-                  steps_input, duration_input, gr.State(0), 
+                  duration_input, gr.State(0), # Removed steps_input
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
 
     v2v_inputs = [v2v_prompt, negative_prompt_input, image_v_hidden, video_v2v,
                   height_input, width_input, gr.State("video-to-video"),
-                  steps_input, duration_input, frames_to_use, 
+                  duration_input, frames_to_use, # Removed steps_input
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
 
     t2v_button.click(fn=generate, inputs=t2v_inputs, outputs=[output_video], api_name="text_to_video")
