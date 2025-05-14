@@ -9,5 +9,6 @@ spaces
 opencv-python
 imageio
 imageio-ffmpeg
-
+einops
+timm
 git+https://github.com/huggingface/diffusers.git@main
