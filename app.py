@@ -94,21 +94,21 @@ pipe = create_ltx_video_pipeline(
     sampler=PIPELINE_CONFIG_YAML["sampler"], # "from_checkpoint" or specific sampler
     device=DEVICE,
     enhance_prompt=False, # Assuming Gradio controls this, or set based on YAML later
-)
+).to(torch.bfloat16)
 
 # Create Latent Upsampler
 latent_upsampler = create_latent_upsampler(
     latent_upsampler_model_path=spatial_upsampler_path,
     device=DEVICE
 )
-latent_upsampler = latent_upsampler.to(torch.bfloat16 if PIPELINE_CONFIG_YAML["precision"] == "bfloat16" else torch.float32)
+latent_upsampler = latent_upsampler.to(torch.bfloat16)
 
 
 # Multi-scale pipeline (wrapper)
 multi_scale_pipe = LTXMultiScalePipeline(
     video_pipeline=pipe,
     latent_upsampler=latent_upsampler
-)
+).to(torch.bfloat16)
 # --- End Global Configuration & Model Loading ---
 
 
@@ -287,7 +287,7 @@ def generate(prompt,
             "output_type": "latent"
         }
         latents = pipe(**first_pass_args).images # .images here is actually latents
-
+        print("First pass done!")
         # 2. Upsample latents manually
         # Need to handle normalization around latent upsampler if it expects unnormalized latents
         latents_unnorm = un_normalize_latents(latents, pipe.vae, vae_per_channel_normalize=True)
@@ -324,8 +324,9 @@ def generate(prompt,
             decode_noise_val = PIPELINE_CONFIG_YAML.get("decode_noise_scale", 0.025)
             upsampled_latents = upsampled_latents * (1 - decode_noise_val) + noise * decode_noise_val
 
-
+        print("before vae decoding")
         result_frames_tensor = pipe.vae.decode(upsampled_latents, **decode_kwargs).sample
+        print("after vae decoding?")
         # result_frames_tensor shape: (B, C, F_video, H_video, W_video)
 
     # --- Post-processing: Cropping and Converting to PIL ---
