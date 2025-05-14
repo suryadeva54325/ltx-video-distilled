@@ -400,7 +400,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
                     i2v_button = gr.Button("Generate Image-to-Video")
                 with gr.Tab("video-to-video") as video_tab:
                     image_v = gr.Image(label="", visible=False, value=None)
-                    video_v2v = gr.Video(label="input video", type="filepath")
+                    video_v2v = gr.Video(label="input video")
                     frames_to_use = gr.Number(label="num frames to use",info="first # of frames to use from the input video for conditioning/transformation", value=9)
                     v2v_prompt = gr.Textbox(label="prompt", value="Change the style to cinematic anime")
                     v2v_button = gr.Button("Generate Video-to-Video")
