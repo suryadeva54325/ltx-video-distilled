@@ -206,40 +206,39 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
     #print("Models moved.")
 
     result_images_tensor = None
-    try:
-        if improve_texture_flag:
-            if not active_latent_upsampler:
-                raise gr.Error("Spatial upscaler model not loaded or improve_texture not selected, cannot use multi-scale.")
-            
-            multi_scale_pipeline_obj = LTXMultiScalePipeline(pipeline_instance, active_latent_upsampler)
-            
-            first_pass_args = PIPELINE_CONFIG_YAML.get("first_pass", {}).copy()
-            first_pass_args["guidance_scale"] = float(ui_guidance_scale)
-            if "timesteps" not in first_pass_args:
-                first_pass_args["num_inference_steps"] = int(ui_steps)
+    if improve_texture_flag:
+        if not active_latent_upsampler:
+            raise gr.Error("Spatial upscaler model not loaded or improve_texture not selected, cannot use multi-scale.")
+        
+        multi_scale_pipeline_obj = LTXMultiScalePipeline(pipeline_instance, active_latent_upsampler)
+        
+        first_pass_args = PIPELINE_CONFIG_YAML.get("first_pass", {}).copy()
+        first_pass_args["guidance_scale"] = float(ui_guidance_scale)
+        if "timesteps" not in first_pass_args:
+            first_pass_args["num_inference_steps"] = int(ui_steps)
 
-            second_pass_args = PIPELINE_CONFIG_YAML.get("second_pass", {}).copy()
-            second_pass_args["guidance_scale"] = float(ui_guidance_scale)
-            
-            multi_scale_call_kwargs = call_kwargs.copy()
-            multi_scale_call_kwargs.update({
-                "downscale_factor": PIPELINE_CONFIG_YAML["downscale_factor"],
-                "first_pass": first_pass_args,
-                "second_pass": second_pass_args,
-            })
-            
-            print(f"Calling multi-scale pipeline (eff. HxW: {actual_height}x{actual_width}) on {target_inference_device}")
-            result_images_tensor = multi_scale_pipeline_obj(**multi_scale_call_kwargs).images
-        else:
-            single_pass_call_kwargs = call_kwargs.copy()
-            single_pass_call_kwargs["guidance_scale"] = float(ui_guidance_scale)
-            single_pass_call_kwargs["num_inference_steps"] = int(ui_steps)
-            single_pass_call_kwargs.pop("first_pass", None)
-            single_pass_call_kwargs.pop("second_pass", None)
-            single_pass_call_kwargs.pop("downscale_factor", None)
-            
-            print(f"Calling base pipeline (padded HxW: {height_padded}x{width_padded}) on {target_inference_device}")
-            result_images_tensor = pipeline_instance(**single_pass_call_kwargs).images
+        second_pass_args = PIPELINE_CONFIG_YAML.get("second_pass", {}).copy()
+        second_pass_args["guidance_scale"] = float(ui_guidance_scale)
+        
+        multi_scale_call_kwargs = call_kwargs.copy()
+        multi_scale_call_kwargs.update({
+            "downscale_factor": PIPELINE_CONFIG_YAML["downscale_factor"],
+            "first_pass": first_pass_args,
+            "second_pass": second_pass_args,
+        })
+        
+        print(f"Calling multi-scale pipeline (eff. HxW: {actual_height}x{actual_width}) on {target_inference_device}")
+        result_images_tensor = multi_scale_pipeline_obj(**multi_scale_call_kwargs).images
+    else:
+        single_pass_call_kwargs = call_kwargs.copy()
+        single_pass_call_kwargs["guidance_scale"] = float(ui_guidance_scale)
+        single_pass_call_kwargs["num_inference_steps"] = int(ui_steps)
+        single_pass_call_kwargs.pop("first_pass", None)
+        single_pass_call_kwargs.pop("second_pass", None)
+        single_pass_call_kwargs.pop("downscale_factor", None)
+        
+        print(f"Calling base pipeline (padded HxW: {height_padded}x{width_padded}) on {target_inference_device}")
+        result_images_tensor = pipeline_instance(**single_pass_call_kwargs).images
 
     if result_images_tensor is None:
         raise gr.Error("Generation failed.")
