@@ -1,5 +1,6 @@
 import gradio as gr
 import torch
+import spaces
 import numpy as np
 import random
 import os
@@ -113,7 +114,10 @@ if PIPELINE_CONFIG_YAML.get("spatial_upscaler_model_path"):
     )
     print("Latent upsampler created on CPU.")
 
+pipeline_instance.to(target_inference_device)
+latent_upsampler_instance.to(target_inference_device)
 
+@spaces.GPU
 def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath,
              height_ui, width_ui, mode,
              ui_steps, num_frames_ui,
@@ -196,12 +200,11 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
             raise gr.Error(f"Could not load video: {e}")
 
     print(f"Moving models to {target_inference_device} for inference...")
-    pipeline_instance.to(target_inference_device)
+    
     active_latent_upsampler = None
     if improve_texture_flag and latent_upsampler_instance:
-        latent_upsampler_instance.to(target_inference_device)
         active_latent_upsampler = latent_upsampler_instance
-    print("Models moved.")
+    #print("Models moved.")
 
     result_images_tensor = None
     try:
@@ -238,16 +241,6 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
             
             print(f"Calling base pipeline (padded HxW: {height_padded}x{width_padded}) on {target_inference_device}")
             result_images_tensor = pipeline_instance(**single_pass_call_kwargs).images
-    
-    finally:
-        print(f"Moving models back to CPU...")
-        pipeline_instance.to("cpu")
-        if active_latent_upsampler:
-            active_latent_upsampler.to("cpu")
-        
-        if target_inference_device == "cuda":
-            torch.cuda.empty_cache()
-        print("Models moved back to CPU and cache cleared (if CUDA).")
 
     if result_images_tensor is None:
         raise gr.Error("Generation failed.")
@@ -316,22 +309,22 @@ css="""
 }
 """
 
-with gr.Blocks(css=css, theme=gr.themes.Glass()) as demo:
+with gr.Blocks(css=css) as demo:
     gr.Markdown("# LTX Video 0.9.7 Distilled (using LTX-Video lib)")
     gr.Markdown("Generates a short video based on text prompt, image, or existing video. Models are moved to GPU during generation and back to CPU afterwards to save VRAM.")
     with gr.Row():
         with gr.Column():
             with gr.Group():
-                with gr.Tab("text-to-video") as text_tab:
-                    image_n_hidden = gr.Textbox(label="image_n", visible=False, value=None)
-                    video_n_hidden = gr.Textbox(label="video_n", visible=False, value=None)
-                    t2v_prompt = gr.Textbox(label="Prompt", value="A majestic dragon flying over a medieval castle", lines=3)
-                    t2v_button = gr.Button("Generate Text-to-Video", variant="primary")
                 with gr.Tab("image-to-video") as image_tab:
                     video_i_hidden = gr.Textbox(label="video_i", visible=False, value=None)
                     image_i2v = gr.Image(label="Input Image", type="filepath", sources=["upload", "webcam"])
                     i2v_prompt = gr.Textbox(label="Prompt", value="The creature from the image starts to move", lines=3)
                     i2v_button = gr.Button("Generate Image-to-Video", variant="primary")
+                with gr.Tab("text-to-video") as text_tab:
+                    image_n_hidden = gr.Textbox(label="image_n", visible=False, value=None)
+                    video_n_hidden = gr.Textbox(label="video_n", visible=False, value=None)
+                    t2v_prompt = gr.Textbox(label="Prompt", value="A majestic dragon flying over a medieval castle", lines=3)
+                    t2v_button = gr.Button("Generate Text-to-Video", variant="primary")
                 with gr.Tab("video-to-video") as video_tab:
                     image_v_hidden = gr.Textbox(label="image_v", visible=False, value=None)
                     video_v2v = gr.Video(label="Input Video", sources=["upload", "webcam"])
