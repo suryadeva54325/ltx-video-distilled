@@ -7,5 +7,7 @@ torchvision
 huggingface_hub
 spaces
 opencv-python
+imageio
+imageio-ffmpeg
 
 git+https://github.com/huggingface/diffusers.git@main
