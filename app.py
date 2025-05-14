@@ -28,15 +28,11 @@ config_file_path = "configs/ltxv-13b-0.9.7-distilled.yaml"
 with open(config_file_path, "r") as file:
     PIPELINE_CONFIG_YAML = yaml.safe_load(file)
 
-# Model specific paths (to be downloaded)
-DISTILLED_MODEL_REPO = "LTX-Colab/LTX-Video-Preview"
-DISTILLED_MODEL_FILENAME = "ltxv-13b-0.9.7-distilled-rc3.safetensors"
-
-UPSCALER_REPO = "Lightricks/LTX-Video"
-
+LTX_REPO = "Lightricks/LTX-Video"
 MAX_IMAGE_SIZE = PIPELINE_CONFIG_YAML.get("max_resolution", 1280)
 MAX_NUM_FRAMES = 257
-FPS = 30.0  # Frames per second for duration calculation
+
+FPS = 30.0 
 
 # --- Global variables for loaded models ---
 pipeline_instance = None
@@ -46,8 +42,8 @@ Path(models_dir).mkdir(parents=True, exist_ok=True)
 
 print("Downloading models (if not present)...")
 distilled_model_actual_path = hf_hub_download(
-    repo_id=DISTILLED_MODEL_REPO,
-    filename=DISTILLED_MODEL_FILENAME,
+    repo_id=LTX_REPO,
+    filename=PIPELINE_CONFIG_YAML["checkpoint_path"],
     local_dir=models_dir,
     local_dir_use_symlinks=False
 )
@@ -56,7 +52,7 @@ print(f"Distilled model path: {distilled_model_actual_path}")
 
 SPATIAL_UPSCALER_FILENAME = PIPELINE_CONFIG_YAML["spatial_upscaler_model_path"]
 spatial_upscaler_actual_path = hf_hub_download(
-    repo_id=UPSCALER_REPO,
+    repo_id=LTX_REPO,
     filename=SPATIAL_UPSCALER_FILENAME,
     local_dir=models_dir,
     local_dir_use_symlinks=False
