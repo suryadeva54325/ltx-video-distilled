@@ -1,10 +1,10 @@
 import gradio as gr
 import spaces 
 import torch
-from pipeline_ltx_condition import LTXVideoCondition, LTXConditionPipeline
-from diffusers import LTXLatentUpsamplePipeline
-#from diffusers import LTXConditionPipeline, LTXLatentUpsamplePipeline
-#from diffusers.pipelines.ltx.pipeline_ltx_condition import LTXVideoCondition
+# from pipeline_ltx_condition import LTXVideoCondition, LTXConditionPipeline
+# from diffusers import LTXLatentUpsamplePipeline
+from diffusers import LTXConditionPipeline, LTXLatentUpsamplePipeline
+from diffusers.pipelines.ltx.pipeline_ltx_condition import LTXVideoCondition
 from diffusers.utils import export_to_video, load_video
 import numpy as np
 
@@ -32,10 +32,15 @@ def generate(prompt,
              num_frames,
              seed,
              randomize_seed,
-             t2v, progress=gr.Progress(track_tqdm=True)):
+             t2v, improve_texture=False, progress=gr.Progress(track_tqdm=True)):
     
+    
+    # Part 1. Generate video at smaller resolution
+    # Text-only conditioning is also supported without the need to pass `conditions`
     expected_height, expected_width = 768, 1152
     downscale_factor = 2 / 3
+    downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
+    downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
 
     if randomize_seed:
         seed = random.randint(0, MAX_SEED)
@@ -46,33 +51,30 @@ def generate(prompt,
             conditions=condition1,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            # width=downscaled_width,
-            # height=downscaled_height,
+            width=downscaled_width,
+            height=downscaled_height,
             num_frames=num_frames,
             num_inference_steps=steps,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
             generator=torch.Generator(device="cuda").manual_seed(seed),
-            #output_type="latent",
+            output_type="latent",
         ).frames
     else:
         latents = pipe(
             prompt=prompt,
             negative_prompt=negative_prompt,
-            # width=downscaled_width,
-            # height=downscaled_height,
+            width=downscaled_width,
+            height=downscaled_height,
             num_frames=num_frames,
             num_inference_steps=steps,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
             generator=torch.Generator(device="cuda").manual_seed(seed),
-            #output_type="latent",
+            output_type="latent",
         ).frames
 
-    # Part 1. Generate video at smaller resolution
-    # Text-only conditioning is also supported without the need to pass `conditions`
-    downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
-    downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
+   
     
     # latents = pipe(
     #         conditions=condition1,
@@ -90,32 +92,39 @@ def generate(prompt,
         
     # Part 2. Upscale generated video using latent upsampler with fewer inference steps
     # The available latent upsampler upscales the height/width by 2x
-    # upscaled_height, upscaled_width = downscaled_height * 2, downscaled_width * 2
-    # upscaled_latents = pipe_upsample(
-    #     latents=latents,
-    #     output_type="latent"
-    # ).frames
+    if improve_texture:
+        upscaled_height, upscaled_width = downscaled_height * 2, downscaled_width * 2
+        upscaled_latents = pipe_upsample(
+            latents=latents,
+            output_type="latent"
+        ).frames
+        
+        # Part 3. Denoise the upscaled video with few steps to improve texture (optional, but recommended)
     
-    # # Part 3. Denoise the upscaled video with few steps to improve texture (optional, but recommended)
-    # video = pipe(
-    #     conditions=condition1,
-    #     prompt=prompt,
-    #     negative_prompt=negative_prompt,
-    #     width=upscaled_width,
-    #     height=upscaled_height,
-    #     num_frames=num_frames,
-    #     denoise_strength=0.4,  # Effectively, 4 inference steps out of 10
-    #     num_inference_steps=10,
-    #     latents=upscaled_latents,
-    #     decode_timestep=0.05,
-    #     image_cond_noise_scale=0.025,
-    #     generator=torch.Generator().manual_seed(seed),
-    #     output_type="pil",
-    # ).frames[0]
+        video = pipe(
+            conditions=condition1,
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            width=upscaled_width,
+            height=upscaled_height,
+            num_frames=num_frames,
+            denoise_strength=0.4,  # Effectively, 4 inference steps out of 10
+            num_inference_steps=10,
+            latents=upscaled_latents,
+            decode_timestep=0.05,
+            image_cond_noise_scale=0.025,
+            generator=torch.Generator().manual_seed(seed),
+            output_type="pil",
+        ).frames[0]
+    else:
+        upscaled_height, upscaled_width = downscaled_height * 2, downscaled_width * 2
+        video = pipe_upsample(
+            latents=latents,
+            # output_type="latent"
+        ).frames[0]
     
     # Part 4. Downscale the video to the expected resolution
-    #video = [frame.resize((expected_width, expected_height)) for frame in video]
-    video = [frame.resize((expected_width, expected_height)) for frame in latents[0]]
+    video = [frame.resize((expected_width, expected_height)) for frame in video]
     export_to_video(video, "output.mp4", fps=24)
     return "output.mp4"
 
