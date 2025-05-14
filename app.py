@@ -52,7 +52,7 @@ def generate(prompt,
             num_inference_steps=steps,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
-            generator=torch.Generator().manual_seed(seed),
+            generator=torch.Generator(device="cuda").manual_seed(seed),
             #output_type="latent",
         ).frames
     else:
@@ -65,7 +65,7 @@ def generate(prompt,
             num_inference_steps=steps,
             decode_timestep = 0.05,
             decode_noise_scale = 0.025,
-            generator=torch.Generator().manual_seed(seed),
+            generator=torch.Generator(device="cuda").manual_seed(seed),
             #output_type="latent",
         ).frames
 
@@ -114,8 +114,9 @@ def generate(prompt,
     # ).frames[0]
     
     # Part 4. Downscale the video to the expected resolution
+    #video = [frame.resize((expected_width, expected_height)) for frame in video]
     video = [frame.resize((expected_width, expected_height)) for frame in latents[0]]
-    export_to_video(latents, "output.mp4", fps=24)
+    export_to_video(video, "output.mp4", fps=24)
     return "output.mp4"
 
 
