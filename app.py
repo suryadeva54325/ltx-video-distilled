@@ -119,8 +119,9 @@ def generate(prompt,
             width=upscaled_width,
             height=upscaled_height,
             num_frames=num_frames,
-            denoise_strength=0.4,  # Effectively, 4 inference steps out of 10
-            num_inference_steps=10,
+            guidance_scale=1.0,
+            denoise_strength=0.6,  # Effectively, 4 inference steps out of 10
+            num_inference_steps=3,
             latents=upscaled_latents,
             decode_timestep=0.05,
             image_cond_noise_scale=0.025,
