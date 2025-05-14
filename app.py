@@ -40,7 +40,7 @@ MODEL_DIR = "downloaded_models" # Directory to store downloaded models
 Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
 # Load YAML configuration
-YAML_CONFIG_PATH = "ltxv-13b-0.9.7-distilled.yaml" # Place this file in the same directory
+YAML_CONFIG_PATH = "configs/ltxv-13b-0.9.7-distilled.yaml" # Place this file in the same directory
 with open(YAML_CONFIG_PATH, "r") as f:
     PIPELINE_CONFIG_YAML = yaml.safe_load(f)
 
