@@ -38,6 +38,8 @@ def generate(prompt,
              negative_prompt,
              image,
              video,
+             height,
+             width,
              mode,
              steps,
              num_frames,
@@ -51,15 +53,15 @@ def generate(prompt,
         
     # Part 1. Generate video at smaller resolution
     # Text-only conditioning is also supported without the need to pass `conditions`
-    expected_height, expected_width = 768, 1152 #todo make configurable
+    expected_height, expected_width = height, width 
     downscale_factor = 2 / 3
     downscaled_height, downscaled_width = int(expected_height * downscale_factor), int(expected_width * downscale_factor)
     downscaled_height, downscaled_width = round_to_nearest_resolution_acceptable_by_vae(downscaled_height, downscaled_width)
 
-    if mode == "text-to-video" and video is not None:
+    if mode == "text-to-video" and (video is not None):
         video = load_video(video)[:frames_to_use]
         condition = True
-    elif mode == "image-to-video" and image is not None:
+    elif mode == "image-to-video" and (image is not None):
         video = [image]
         condition = True
     else:
@@ -85,22 +87,6 @@ def generate(prompt,
         output_type="latent",
     ).frames
    
-
-   
-    
-    # latents = pipe(
-    #         conditions=condition1,
-    #         prompt=prompt,
-    #         negative_prompt=negative_prompt,
-    #         # width=downscaled_width,
-    #         # height=downscaled_height,
-    #         num_frames=num_frames,
-    #         num_inference_steps=steps,
-    #         decode_timestep = 0.05,
-    #         decode_noise_scale = 0.025,
-    #         generator=torch.Generator().manual_seed(seed),
-    #         #output_type="latent",
-    #     ).frames
         
     # Part 2. Upscale generated video using latent upsampler with fewer inference steps
     # The available latent upsampler upscales the height/width by 2x
@@ -120,7 +106,7 @@ def generate(prompt,
             height=upscaled_height,
             num_frames=num_frames,
             guidance_scale=1.0,
-            denoise_strength=0.6,  # Effectively, 4 inference steps out of 10
+            denoise_strength=0.6,  # Effectively, 0.6 * 3 inference steps
             num_inference_steps=3,
             latents=upscaled_latents,
             decode_timestep=0.05,
@@ -168,15 +154,14 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
     with gr.Column():
       with gr.Group():
         with gr.Tab("text-to-video") as text_tab:
-          image = gr.Image(label="", visible=False)
-          #prompt = gr.Textbox(label="prompt")
+          image_n = gr.Image(label="", visible=False)
         with gr.Tab("image-to-video") as image_tab:
-          image = gr.Image(label="")
+          image = gr.Image(label="input image")
         with gr.Tab("video-to-video") as video_tab:
-          video = gr.Video(label="")
+          video = gr.Video(label="input video")
           frames_to_use = gr.Number(label="num frames to use",info="first # of frames to use from the input video", value=1)
         prompt = gr.Textbox(label="prompt")
-        improve_texture = gr.Checkbox(label="improve texture", value=False, info="note it slows generation")
+        improve_texture = gr.Checkbox(label="improve texture", value=False, info="slows down generation")
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
@@ -204,6 +189,8 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
              negative_prompt,
              image,
              video,
+             height,
+             width,
              mode,
              steps,
              num_frames,
