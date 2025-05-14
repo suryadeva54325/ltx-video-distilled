@@ -20,8 +20,10 @@ MAX_IMAGE_SIZE = 2048
 
 
 def round_to_nearest_resolution_acceptable_by_vae(height, width):
+    print("before rounding",height, width)
     height = height - (height % pipe.vae_temporal_compression_ratio)
     width = width - (width % pipe.vae_temporal_compression_ratio)
+    print("after rounding",height, width)
     return height, width
 
 def change_mode_to_text():
@@ -176,8 +178,8 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
       steps = gr.Slider(label="Steps", minimum=1, maximum=30, value=8, step=1)
       num_frames = gr.Slider(label="# frames", minimum=1, maximum=161, value=96, step=1)
      with gr.Row():
-       height = gr.Slider(label="height", value=512, step=1)
-       width = gr.Slider(label="width", value=704, step=1)
+       height = gr.Slider(label="height", value=512, step=1, maximum=2048)
+       width = gr.Slider(label="width", value=704, step=1, maximum=2048)
     
 
   text_tab.select(fn=change_mode_to_text, inputs=[], outputs=[mode])
