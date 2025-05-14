@@ -67,34 +67,24 @@ def generate(prompt,
 
     if condition:
         condition1 = LTXVideoCondition(video=video, frame_index=0)
-        latents = pipe(
-            conditions=condition1,
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            width=downscaled_width,
-            height=downscaled_height,
-            num_frames=num_frames,
-            num_inference_steps=steps,
-            decode_timestep = 0.05,
-            decode_noise_scale = 0.025,
-            guidance_scale=1.0,
-            generator=torch.Generator(device="cuda").manual_seed(seed),
-            output_type="latent",
-        ).frames
     else:
-        latents = pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            width=downscaled_width,
-            height=downscaled_height,
-            num_frames=num_frames,
-            num_inference_steps=steps,
-            decode_timestep = 0.05,
-            decode_noise_scale = 0.025,
-            guidance_scale=1.0,
-            generator=torch.Generator(device="cuda").manual_seed(seed),
-            output_type="latent",
-        ).frames
+        condition1 = None
+    
+    latents = pipe(
+        conditions=condition1,
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        width=downscaled_width,
+        height=downscaled_height,
+        num_frames=num_frames,
+        num_inference_steps=steps,
+        decode_timestep = 0.05,
+        decode_noise_scale = 0.025,
+        guidance_scale=1.0,
+        generator=torch.Generator(device="cuda").manual_seed(seed),
+        output_type="latent",
+    ).frames
+   
 
    
     
@@ -121,8 +111,7 @@ def generate(prompt,
             output_type="latent"
         ).frames
         
-        # Part 3. Denoise the upscaled video with few steps to improve texture (optional, but recommended)
-    
+        # Part 3. Denoise the upscaled video with few steps to improve texture (optional, but recommended)  
         video = pipe(
             conditions=condition1,
             prompt=prompt,
@@ -186,7 +175,7 @@ with gr.Blocks(css=css, theme=gr.themes.Ocean()) as demo:
           video = gr.Video(label="")
           frames_to_use = gr.Number(label="num frames to use",info="first # of frames to use from the input video", value=1)
         prompt = gr.Textbox(label="prompt")
-        improve_texture = gr.Checkbox("improve texture", value=False, info="note it slows generation")
+        improve_texture = gr.Checkbox(label="improve texture", value=False, info="note it slows generation")
       run_button = gr.Button()
     with gr.Column():
       output = gr.Video(interactive=False)
