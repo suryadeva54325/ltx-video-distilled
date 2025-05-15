@@ -319,7 +319,7 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
             print(f"Fallback video saving error: {e2}")
             raise gr.Error(f"Failed to save video: {e2}")
             
-    return output_video_path
+    return output_video_path, seed_ui
 
 
 # --- Gradio UI Definition ---
@@ -371,7 +371,7 @@ with gr.Blocks(css=css) as demo:
         negative_prompt_input = gr.Textbox(label="Negative Prompt", value="worst quality, inconsistent motion, blurry, jittery, distorted", lines=2)
         with gr.Row():
             seed_input = gr.Number(label="Seed", value=42, precision=0, minimum=0, maximum=2**32-1)
-            randomize_seed_input = gr.Checkbox(label="Randomize Seed", value=False)
+            randomize_seed_input = gr.Checkbox(label="Randomize Seed", value=True)
         with gr.Row():
             guidance_scale_input = gr.Slider(label="Guidance Scale (CFG)", minimum=1.0, maximum=10.0, value=PIPELINE_CONFIG_YAML.get("first_pass", {}).get("guidance_scale", 1.0), step=0.1, info="Controls how much the prompt influences the output. Higher values = stronger influence.")
             # Removed steps_input slider
@@ -461,9 +461,9 @@ with gr.Blocks(css=css) as demo:
                   duration_input, frames_to_use, # Removed steps_input
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
 
-    t2v_button.click(fn=generate, inputs=t2v_inputs, outputs=[output_video], api_name="text_to_video")
-    i2v_button.click(fn=generate, inputs=i2v_inputs, outputs=[output_video], api_name="image_to_video")
-    v2v_button.click(fn=generate, inputs=v2v_inputs, outputs=[output_video], api_name="video_to_video")
+    t2v_button.click(fn=generate, inputs=t2v_inputs, outputs=[output_video, seed_ui], api_name="text_to_video")
+    i2v_button.click(fn=generate, inputs=i2v_inputs, outputs=[output_video, seed_ui], api_name="image_to_video")
+    v2v_button.click(fn=generate, inputs=v2v_inputs, outputs=[output_video, seed_ui], api_name="video_to_video")
 
 if __name__ == "__main__":
     if os.path.exists(models_dir) and os.path.isdir(models_dir):
