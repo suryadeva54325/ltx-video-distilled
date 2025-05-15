@@ -461,9 +461,9 @@ with gr.Blocks(css=css) as demo:
                   duration_input, frames_to_use, # Removed steps_input
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
 
-    t2v_button.click(fn=generate, inputs=t2v_inputs, outputs=[output_video, seed_ui], api_name="text_to_video")
-    i2v_button.click(fn=generate, inputs=i2v_inputs, outputs=[output_video, seed_ui], api_name="image_to_video")
-    v2v_button.click(fn=generate, inputs=v2v_inputs, outputs=[output_video, seed_ui], api_name="video_to_video")
+    t2v_button.click(fn=generate, inputs=t2v_inputs, outputs=[output_video, seed_input], api_name="text_to_video")
+    i2v_button.click(fn=generate, inputs=i2v_inputs, outputs=[output_video, seed_input], api_name="image_to_video")
+    v2v_button.click(fn=generate, inputs=v2v_inputs, outputs=[output_video, seed_input], api_name="video_to_video")
 
 if __name__ == "__main__":
     if os.path.exists(models_dir) and os.path.isdir(models_dir):
