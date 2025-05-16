@@ -376,7 +376,7 @@ with gr.Blocks(css=css) as demo:
             gr.DeepLinkButton()
 
     with gr.Accordion("Advanced settings", open=False):
-        mode = gr.Dropdown(["text-to-video", "image-to-video", "video-to-video"], label="task", visible=False)
+        mode = gr.Dropdown(["text-to-video", "image-to-video", "video-to-video"], label="task", value="image-to-video", visible=False)
         negative_prompt_input = gr.Textbox(label="Negative Prompt", value="worst quality, inconsistent motion, blurry, jittery, distorted", lines=2)
         with gr.Row():
             seed_input = gr.Number(label="Seed", value=42, precision=0, minimum=0, maximum=2**32-1)
