@@ -321,15 +321,14 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
             
     return output_video_path, seed_ui
 
-def update_task_image{
+def update_task_image():
     return "image-to-video"
-}
-def update_task_text{
+
+def update_task_text():
     return "text-to-video"
-}
-def update_task_video{
+
+def update_task_video():
     return "video-to-video"
-}
 
 # --- Gradio UI Definition ---
 css="""
