@@ -346,7 +346,7 @@ with gr.Blocks(css=css) as demo:
         with gr.Column():
             with gr.Tab("image-to-video") as image_tab:
                 video_i_hidden = gr.Textbox(label="video_i", visible=False, value=None)
-                image_i2v = gr.Image(label="Input Image", type="filepath", sources=["upload", "webcam"])
+                image_i2v = gr.Image(label="Input Image", type="filepath", sources=["upload", "webcam", "clipboard"])
                 i2v_prompt = gr.Textbox(label="Prompt", value="The creature from the image starts to move", lines=3)
                 i2v_button = gr.Button("Generate Image-to-Video", variant="primary")
             with gr.Tab("text-to-video") as text_tab:
