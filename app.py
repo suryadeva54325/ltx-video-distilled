@@ -143,7 +143,7 @@ def get_duration(prompt, negative_prompt, input_image_filepath, input_video_file
 @spaces.GPU(duration=get_duration)
 def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath,
              height_ui, width_ui, mode,
-             duration_ui, # Removed ui_steps
+             duration_ui, 
              ui_frames_to_use,
              seed_ui, randomize_seed, ui_guidance_scale, improve_texture_flag,
              progress=gr.Progress(track_tqdm=True)):
@@ -321,6 +321,15 @@ def generate(prompt, negative_prompt, input_image_filepath, input_video_filepath
             
     return output_video_path, seed_ui
 
+def update_task_image{
+    return "image-to-video"
+}
+def update_task_text{
+    return "text-to-video"
+}
+def update_task_video{
+    return "video-to-video"
+}
 
 # --- Gradio UI Definition ---
 css="""
@@ -368,15 +377,13 @@ with gr.Blocks(css=css) as demo:
             gr.DeepLinkButton()
 
     with gr.Accordion("Advanced settings", open=False):
+        mode = gr.Dropdown(["text-to-video", "image-to-video", "video-to-video"], label="task", visible=False)
         negative_prompt_input = gr.Textbox(label="Negative Prompt", value="worst quality, inconsistent motion, blurry, jittery, distorted", lines=2)
         with gr.Row():
             seed_input = gr.Number(label="Seed", value=42, precision=0, minimum=0, maximum=2**32-1)
             randomize_seed_input = gr.Checkbox(label="Randomize Seed", value=True)
         with gr.Row():
             guidance_scale_input = gr.Slider(label="Guidance Scale (CFG)", minimum=1.0, maximum=10.0, value=PIPELINE_CONFIG_YAML.get("first_pass", {}).get("guidance_scale", 1.0), step=0.1, info="Controls how much the prompt influences the output. Higher values = stronger influence.")
-            # Removed steps_input slider
-            # default_steps = len(PIPELINE_CONFIG_YAML.get("first_pass", {}).get("timesteps", [1]*7)) 
-            # steps_input = gr.Slider(label="Inference Steps (for first pass if multi-scale)", minimum=1, maximum=30, value=default_steps, step=1, info="Number of denoising steps. More steps can improve quality but increase time. If YAML defines 'timesteps' for a pass, this UI value is ignored for that pass.")
         with gr.Row():
             height_input = gr.Slider(label="Height", value=512, step=32, minimum=MIN_DIM_SLIDER, maximum=MAX_IMAGE_SIZE, info="Must be divisible by 32.")
             width_input = gr.Slider(label="Width", value=704, step=32, minimum=MIN_DIM_SLIDER, maximum=MAX_IMAGE_SIZE, info="Must be divisible by 32.")
@@ -433,7 +440,7 @@ with gr.Blocks(css=css) as demo:
             print(f"Error processing video for dimension update: {e} (Path: {video_filepath}, Type: {type(video_filepath)})")
             return gr.update(value=current_h), gr.update(value=current_w)
 
-    # Attach upload handlers
+    
     image_i2v.upload(
         fn=handle_image_upload_for_dims,
         inputs=[image_i2v, height_input, width_input],
@@ -444,21 +451,29 @@ with gr.Blocks(css=css) as demo:
         inputs=[video_v2v, height_input, width_input],
         outputs=[height_input, width_input]
     )
+
+    image_tab.select(
+        fn=update_task_image,
+        outputs=[mode]
+    )
+    text_tab.select(
+        fn=update_task_text,
+        outputs=[mode]
+    )
     
-    # --- INPUT LISTS (remain the same structurally) ---
     t2v_inputs = [t2v_prompt, negative_prompt_input, image_n_hidden, video_n_hidden,
-                  height_input, width_input, gr.State("text-to-video"),
-                  duration_input, gr.State(0), # Removed steps_input
+                  height_input, width_input, mode,
+                  duration_input, frames_to_use, 
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
     
     i2v_inputs = [i2v_prompt, negative_prompt_input, image_i2v, video_i_hidden,
-                  height_input, width_input, gr.State("image-to-video"),
-                  duration_input, gr.State(0), # Removed steps_input
+                  height_input, width_input, mode,
+                  duration_input, frames_to_use, 
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
 
     v2v_inputs = [v2v_prompt, negative_prompt_input, image_v_hidden, video_v2v,
-                  height_input, width_input, gr.State("video-to-video"),
-                  duration_input, frames_to_use, # Removed steps_input
+                  height_input, width_input, mode,
+                  duration_input, frames_to_use, 
                   seed_input, randomize_seed_input, guidance_scale_input, improve_texture]
 
     t2v_button.click(fn=generate, inputs=t2v_inputs, outputs=[output_video, seed_input], api_name="text_to_video")
