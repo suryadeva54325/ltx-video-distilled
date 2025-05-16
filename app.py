@@ -346,7 +346,7 @@ with gr.Blocks(css=css) as demo:
         with gr.Column():
             with gr.Tab("image-to-video") as image_tab:
                 video_i_hidden = gr.Textbox(label="video_i", visible=False, value=None)
-                image_i2v = gr.Image(label="Input Image", type="filepath", sources=["upload", "webcam"])
+                image_i2v = gr.Image(label="Input Image", type="filepath", sources=["upload", "webcam", "clipboard"])
                 i2v_prompt = gr.Textbox(label="Prompt", value="The creature from the image starts to move", lines=3)
                 i2v_button = gr.Button("Generate Image-to-Video", variant="primary")
             with gr.Tab("text-to-video") as text_tab:
@@ -356,7 +356,7 @@ with gr.Blocks(css=css) as demo:
                 t2v_button = gr.Button("Generate Text-to-Video", variant="primary")
             with gr.Tab("video-to-video", visible=False) as video_tab:
                 image_v_hidden = gr.Textbox(label="image_v", visible=False, value=None)
-                video_v2v = gr.Video(label="Input Video", sources=["upload", "webcam"]) # type defaults to filepath
+                video_v2v = gr.Video(label="Input Video", sources=["upload", "webcam", "clipboard"]) # type defaults to filepath
                 frames_to_use = gr.Slider(label="Frames to use from input video", minimum=9, maximum=MAX_NUM_FRAMES, value=9, step=8, info="Number of initial frames to use for conditioning/transformation. Must be N*8+1.")
                 v2v_prompt = gr.Textbox(label="Prompt", value="Change the style to cinematic anime", lines=3)
                 v2v_button = gr.Button("Generate Video-to-Video", variant="primary")
