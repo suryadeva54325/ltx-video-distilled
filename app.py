@@ -373,7 +373,7 @@ with gr.Blocks(css=css) as demo:
 
         with gr.Column():
             output_video = gr.Video(label="Generated Video", interactive=False)
-            gr.DeepLinkButton()
+            # gr.DeepLinkButton()
 
     with gr.Accordion("Advanced settings", open=False):
         mode = gr.Dropdown(["text-to-video", "image-to-video", "video-to-video"], label="task", value="image-to-video", visible=False)
