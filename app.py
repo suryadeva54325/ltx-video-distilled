@@ -387,6 +387,34 @@ with gr.Blocks(css=css) as demo:
             height_input = gr.Slider(label="Height", value=512, step=32, minimum=MIN_DIM_SLIDER, maximum=MAX_IMAGE_SIZE, info="Must be divisible by 32.")
             width_input = gr.Slider(label="Width", value=704, step=32, minimum=MIN_DIM_SLIDER, maximum=MAX_IMAGE_SIZE, info="Must be divisible by 32.")
 
+    gr.Examples(
+        examples = [
+                [
+                    "View of the sea as far as the eye can see, from the seaside, a piece of land is barely visible on the horizon at the middle, the sky is radiant, reflections of the sun in the water, photorealistic, realistic, intricate details, 8k, insanely detailed",
+                    "",
+                    "./examples/Example1.png",
+                    None,
+                    512,
+                    704,
+                    "image-to-video",
+                    6,
+                    9,
+                    42,
+                    True,
+                    1,
+                    True
+                ],
+            ],
+        run_on_click = True,
+        fn = generate,
+	    inputs = [i2v_prompt, negative_prompt_input, image_i2v, video_i_hidden,
+                  height_input, width_input, mode,
+                  duration_input, frames_to_use, 
+                  seed_input, randomize_seed_input, guidance_scale_input, improve_texture],
+	    outputs = [output_video, seed_input],
+        cache_examples = True,
+    )
+
 
     # --- Event handlers for updating dimensions on upload ---
     def handle_image_upload_for_dims(image_filepath, current_h, current_w):
